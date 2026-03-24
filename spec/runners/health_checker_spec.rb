@@ -115,5 +115,25 @@ RSpec.describe Legion::Extensions::PilotInfraMonitor::Runners::HealthChecker do
         expect(result[:count]).to eq(2)
       end
     end
+
+    context 'when state worsens within suppression window' do
+      let(:tracker) { Legion::Extensions::PilotInfraMonitor::StateTracker }
+
+      before do
+        tracker.update('https://example.com', :error)
+        tracker.update('https://example.com', :error)
+        tracker.update('https://example.com', :error) # 3 failures -> critical
+        checker.alert_unhealthy(results: [{ url: 'https://example.com', status: :critical }])
+      end
+
+      it 'sends alert even within suppression window when state worsened' do
+        check_state = tracker.check_state_for('https://example.com')
+        allow(check_state).to receive(:worsened?).and_return(true)
+
+        result = checker.alert_unhealthy(results: [{ url: 'https://example.com', status: :critical }])
+        expect(result).not_to be_nil
+        expect(result[:alerted]).to be true
+      end
+    end
   end
 end

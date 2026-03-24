@@ -90,6 +90,10 @@ module Legion
             mutex.synchronize { tracker[url]&.state || :unknown }
           end
 
+          def check_state_for(url)
+            mutex.synchronize { tracker[url] }
+          end
+
           def all_states
             mutex.synchronize do
               tracker.transform_values { |cs| { state: cs.state, since: cs.changed_at, failures: cs.consecutive_failures } }

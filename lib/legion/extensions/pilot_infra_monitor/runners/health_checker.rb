@@ -62,12 +62,12 @@ module Legion
           private
 
           def filter_alertable(results)
-            unhealthy = results.reject { |r| r[:status] == :healthy }
-            return [] if unhealthy.empty?
+            results.select do |r|
+              next false if r[:status] == :healthy
 
-            unhealthy.select do |r|
-              state = StateTracker.state_for(r[:url])
-              AlertDedup.should_alert?(r[:url], state)
+              check_state = StateTracker.check_state_for(r[:url])
+              worsened = check_state&.worsened? || false
+              AlertDedup.should_alert?(r[:url], r[:status], worsened: worsened)
             end
           end
 

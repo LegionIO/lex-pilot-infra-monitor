@@ -7,11 +7,13 @@ module Legion
     module PilotInfraMonitor
       module Runners
         module HealthChecker
-          def check_endpoints(urls: nil, timeout: 5)
-            urls ||= Helpers::Settings.endpoints
-            return { total: 0, healthy: 0, unhealthy: 0, results: [], alert_needed: false, transitions: [] } if urls.empty?
+          def check_endpoints(urls: nil, endpoint_configs: nil, timeout: 5)
+            configs = endpoint_configs || Helpers::Settings.endpoint_configs
+            configs = urls.map { |u| { url: u } } if configs.empty? && urls
+            configs ||= []
+            return { total: 0, healthy: 0, unhealthy: 0, results: [], alert_needed: false, transitions: [] } if configs.empty?
 
-            results = urls.map { |url| check_single(url, timeout) }
+            results = configs.map { |cfg| check_single_config(cfg, timeout) }
             unhealthy = results.reject { |r| r[:status] == :healthy }
 
             state_updates = results.map { |r| StateTracker.update(r[:url], r[:status]) }
@@ -79,6 +81,21 @@ module Legion
             "Health check alert:\n#{details}"
           end
 
+          def check_single_config(config, timeout)
+            url = config.is_a?(Hash) ? config[:url] : config.to_s
+            endpoint_type = config.is_a?(Hash) ? config[:type] : nil
+            result = check_single(url, timeout)
+            return result if result[:status] == :error
+            return result unless endpoint_type
+
+            semantic_status = Helpers::SemanticChecker.classify(
+              type: endpoint_type,
+              status_code: result[:code],
+              body: result.fetch(:body, '')
+            )
+            result.merge(status: semantic_status)
+          end
+
           def check_single(url, timeout)
             uri = URI(url)
             response = Net::HTTP.start(
@@ -89,7 +106,7 @@ module Legion
             ) { |http| http.get(uri.path.empty? ? '/' : uri.path) }
 
             healthy = response.code.to_i < 400
-            { url: url, status: healthy ? :healthy : :unhealthy, code: response.code.to_i }
+            { url: url, status: healthy ? :healthy : :unhealthy, code: response.code.to_i, body: response.body.to_s }
           rescue StandardError => e
             { url: url, status: :error, error: e.message }
           end

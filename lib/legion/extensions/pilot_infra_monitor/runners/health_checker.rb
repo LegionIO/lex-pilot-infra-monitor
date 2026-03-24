@@ -19,6 +19,13 @@ module Legion
             state_updates = results.map { |r| StateTracker.update(r[:url], r[:status]) }
             transitions = state_updates.select { |u| u[:changed] }
 
+            transitions.each do |t|
+              cs = t[:check_state]
+              Helpers::EventPublisher.publish_transition(
+                url: t[:url], from: cs.previous_state, to: t[:state]
+              )
+            end
+
             results.each do |r|
               Helpers::CheckHistory.record(url: r[:url], state: r[:status])
               Helpers::CheckHistory.open_alert(url: r[:url], state: r[:status]) if r[:status] != :healthy

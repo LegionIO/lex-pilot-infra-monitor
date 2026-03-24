@@ -19,6 +19,11 @@ module Legion
             state_updates = results.map { |r| StateTracker.update(r[:url], r[:status]) }
             transitions = state_updates.select { |u| u[:changed] }
 
+            results.each do |r|
+              Helpers::CheckHistory.record(url: r[:url], state: r[:status])
+              Helpers::CheckHistory.open_alert(url: r[:url], state: r[:status]) if r[:status] != :healthy
+            end
+
             {
               total: results.size,
               healthy: results.count { |r| r[:status] == :healthy },
@@ -52,6 +57,7 @@ module Legion
             end.join("\n")
             message = "Recovery:\n#{details}"
 
+            recovered.each { |t| Helpers::CheckHistory.close_alert(url: t[:url]) }
             send_webhook(webhook, message) if webhook
 
             { recovered: true, count: recovered.size, message: message }

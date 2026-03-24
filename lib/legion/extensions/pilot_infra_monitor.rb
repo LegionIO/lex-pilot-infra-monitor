@@ -1,6 +1,8 @@
 # frozen_string_literal: true
 
 require_relative 'pilot_infra_monitor/version'
+require_relative 'pilot_infra_monitor/state_tracker'
+require_relative 'pilot_infra_monitor/alert_dedup'
 require_relative 'pilot_infra_monitor/runners/health_checker'
 
 module Legion

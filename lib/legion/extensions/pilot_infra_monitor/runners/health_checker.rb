@@ -11,30 +11,69 @@ module Legion
             results = urls.map { |url| check_single(url, timeout) }
             unhealthy = results.reject { |r| r[:status] == :healthy }
 
+            state_updates = results.map { |r| StateTracker.update(r[:url], r[:status]) }
+            transitions = state_updates.select { |u| u[:changed] }
+
             {
               total: results.size,
               healthy: results.count { |r| r[:status] == :healthy },
               unhealthy: unhealthy.size,
               results: results,
-              alert_needed: unhealthy.any?
+              alert_needed: unhealthy.any?,
+              transitions: transitions.map { |t| { url: t[:url], state: t[:state] } }
             }
           end
 
           def alert_unhealthy(results:, webhook: nil)
-            unhealthy = results.reject { |r| r[:status] == :healthy }
-            return nil if unhealthy.empty?
+            alertable = filter_alertable(results)
+            return nil if alertable.empty?
 
-            details = unhealthy.map do |r|
-              "  #{r[:url]}: #{r[:status]} (#{r[:error] || r[:code]})"
+            message = build_alert_message(alertable)
+            alertable.each { |r| AlertDedup.record_alert(r[:url], StateTracker.state_for(r[:url])) }
+            send_webhook(webhook, message) if webhook
+
+            { alerted: true, webhook: webhook, count: alertable.size, message: message }
+          end
+
+          def alert_recoveries(transitions:, webhook: nil)
+            recovered = transitions.select { |t| t[:state] == :healthy }
+            return nil if recovered.empty?
+
+            details = recovered.map do |t|
+              cs = t[:check_state]
+              duration = cs.respond_to?(:duration_in_state) ? cs.duration_in_state.round : 0
+              "  #{t[:url]}: recovered (was #{cs.previous_state} for #{duration}s)"
             end.join("\n")
-            message = "Health check alert:\n#{details}"
+            message = "Recovery:\n#{details}"
 
             send_webhook(webhook, message) if webhook
 
-            { alerted: true, webhook: webhook, count: unhealthy.size, message: message }
+            { recovered: true, count: recovered.size, message: message }
+          end
+
+          def health_states
+            StateTracker.all_states
           end
 
           private
+
+          def filter_alertable(results)
+            unhealthy = results.reject { |r| r[:status] == :healthy }
+            return [] if unhealthy.empty?
+
+            unhealthy.select do |r|
+              state = StateTracker.state_for(r[:url])
+              AlertDedup.should_alert?(r[:url], state)
+            end
+          end
+
+          def build_alert_message(alertable)
+            details = alertable.map do |r|
+              state = StateTracker.state_for(r[:url])
+              "  #{r[:url]}: #{state} (#{r[:error] || r[:code]})"
+            end.join("\n")
+            "Health check alert:\n#{details}"
+          end
 
           def check_single(url, timeout)
             uri = URI(url)

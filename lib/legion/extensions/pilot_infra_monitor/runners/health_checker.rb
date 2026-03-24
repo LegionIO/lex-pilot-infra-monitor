@@ -8,28 +8,12 @@ module Legion
       module Runners
         module HealthChecker
           def check_endpoints(urls: nil, endpoint_configs: nil, timeout: 5)
-            configs = endpoint_configs || Helpers::Settings.endpoint_configs
-            configs = urls.map { |u| { url: u } } if configs.empty? && urls
-            configs ||= []
-            return { total: 0, healthy: 0, unhealthy: 0, results: [], alert_needed: false, transitions: [] } if configs.empty?
+            configs = resolve_configs(urls: urls, endpoint_configs: endpoint_configs)
+            return empty_endpoint_result if configs.empty?
 
             results = configs.map { |cfg| check_single_config(cfg, timeout) }
+            transitions = process_state_changes(results)
             unhealthy = results.reject { |r| r[:status] == :healthy }
-
-            state_updates = results.map { |r| StateTracker.update(r[:url], r[:status]) }
-            transitions = state_updates.select { |u| u[:changed] }
-
-            transitions.each do |t|
-              cs = t[:check_state]
-              Helpers::EventPublisher.publish_transition(
-                url: t[:url], from: cs.previous_state, to: t[:state]
-              )
-            end
-
-            results.each do |r|
-              Helpers::CheckHistory.record(url: r[:url], state: r[:status])
-              Helpers::CheckHistory.open_alert(url: r[:url], state: r[:status]) if r[:status] != :healthy
-            end
 
             {
               total: results.size,
@@ -37,7 +21,7 @@ module Legion
               unhealthy: unhealthy.size,
               results: results,
               alert_needed: unhealthy.any?,
-              transitions: transitions.map { |t| { url: t[:url], state: t[:state] } }
+              transitions: transitions
             }
           end
 
@@ -75,6 +59,36 @@ module Legion
           end
 
           private
+
+          def empty_endpoint_result
+            { total: 0, healthy: 0, unhealthy: 0, results: [], alert_needed: false, transitions: [] }
+          end
+
+          def resolve_configs(urls:, endpoint_configs:)
+            configs = endpoint_configs || Helpers::Settings.endpoint_configs
+            configs = urls.map { |u| { url: u } } if configs.empty? && urls
+            configs || []
+          end
+
+          def process_state_changes(results)
+            state_updates = results.map { |r| StateTracker.update(r[:url], r[:status]) }
+            transitions = state_updates.select { |u| u[:changed] }
+            transitions.each { |t| publish_state_transition(t) }
+            results.each { |r| record_check_history(r) }
+            transitions.map { |t| { url: t[:url], state: t[:state] } }
+          end
+
+          def publish_state_transition(transition)
+            cs = transition[:check_state]
+            Helpers::EventPublisher.publish_transition(
+              url: transition[:url], from: cs.previous_state, to: transition[:state]
+            )
+          end
+
+          def record_check_history(result)
+            Helpers::CheckHistory.record(url: result[:url], state: result[:status])
+            Helpers::CheckHistory.open_alert(url: result[:url], state: result[:status]) if result[:status] != :healthy
+          end
 
           def filter_alertable(results)
             results.select do |r|

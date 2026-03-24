@@ -12,6 +12,9 @@ Naming/PredicateMethod:
 Metrics/MethodLength:
   Max: 20
 
+Metrics/ModuleLength:
+  Max: 120
+
 Metrics/AbcSize:
   Max: 25
 
@@ -34,3 +37,6 @@ Layout/LineLength:
 Lint/EmptyClass:
   Exclude:
     - 'spec/**/*'
+
+Lint/UnusedMethodArgument:
+  AllowUnusedKeywordArguments: true

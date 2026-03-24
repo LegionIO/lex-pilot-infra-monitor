@@ -9,9 +9,17 @@
 - `health_states` runner method: returns all tracked URL states
 - State tracking integrated into `check_endpoints` — returns `transitions` array alongside existing results
 - Alert deduplication integrated into `alert_unhealthy` — suppresses duplicate alerts within suppression window
+- Settings-driven endpoint configuration via `Legion::Settings[:pilot_infra_monitor]`
+- Semantic health checks for Consul, Vault, and Nomad APIs (`Helpers::SemanticChecker`)
+- Check history persistence and MTTR tracking (`Helpers::CheckHistory`)
+- AMQP event publishing on state transitions via `Legion::Events` (`Helpers::EventPublisher`)
+
+### Fixed
+- Worsened flag now passed through alert pipeline to bypass suppression window
 
 ### Changed
 - `alert_unhealthy` now filters through AlertDedup before sending alerts; extracted `filter_alertable` and `build_alert_message` private methods
+- `check_endpoints` accepts `endpoint_configs:` for type-aware semantic health checking; `urls:` remains for backward compatibility
 
 ## [0.1.1] - 2026-03-22
 

@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.2.1] - 2026-03-24
+
+### Fixed
+- Version bump to trigger gem release (0.2.0 CI did not publish)
+
 ## [0.2.0] - 2026-03-24
 
 ### Added

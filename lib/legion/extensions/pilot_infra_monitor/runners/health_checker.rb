@@ -7,7 +7,10 @@ module Legion
     module PilotInfraMonitor
       module Runners
         module HealthChecker
-          def check_endpoints(urls:, timeout: 5)
+          def check_endpoints(urls: nil, timeout: 5)
+            urls ||= Helpers::Settings.endpoints
+            return { total: 0, healthy: 0, unhealthy: 0, results: [], alert_needed: false, transitions: [] } if urls.empty?
+
             results = urls.map { |url| check_single(url, timeout) }
             unhealthy = results.reject { |r| r[:status] == :healthy }
 
@@ -25,6 +28,7 @@ module Legion
           end
 
           def alert_unhealthy(results:, webhook: nil)
+            webhook ||= Helpers::Settings.webhook
             alertable = filter_alertable(results)
             return nil if alertable.empty?
 

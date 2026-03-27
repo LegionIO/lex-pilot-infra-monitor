@@ -13,7 +13,15 @@ module Legion
             Legion::Events.emit('health.state_change',
                                 url: url, from: from, to: to, timestamp: timestamp)
           rescue StandardError => e
-            Legion::Logging::Logger.warn("Failed to publish health event: #{e.message}") if defined?(Legion::Logging)
+            log.warn("Failed to publish health event: #{e.message}")
+          end
+
+          def log
+            return Legion::Logging if defined?(Legion::Logging)
+
+            @log ||= Object.new.tap do |nl|
+              %i[debug info warn error fatal].each { |m| nl.define_singleton_method(m) { |*| nil } }
+            end
           end
         end
       end

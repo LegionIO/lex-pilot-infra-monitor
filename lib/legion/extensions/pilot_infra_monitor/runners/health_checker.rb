@@ -147,8 +147,12 @@ module Legion
               webhook: webhook, text: message
             )
           rescue StandardError => e
-            Legion::Logging.logger&.error(e.message)
+            log.error(e.message)
             nil
+          end
+
+          def log
+            defined?(Legion::Logging) ? Legion::Logging : @log ||= ::Logger.new(nil)
           end
         end
       end

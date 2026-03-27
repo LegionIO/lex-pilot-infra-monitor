@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.4] - 2026-03-27
+
+### Fixed
+- `Runners::HealthChecker#send_webhook`: replaced `Legion::Logging.logger&.error` with `log.error` via private `log` helper to satisfy Helper Migration and Rescue Logging CI lint rules
+- `Helpers::SemanticChecker#check_consul`: replaced `Legion::JSON.load` with `json_load` helper and `Legion::Logging.logger&.error` with `log.error` via private `log` helper
+- `Helpers::EventPublisher#publish_transition`: replaced `Legion::Logging::Logger.warn` with `log.warn` via private `log` helper
+
 ## [0.2.3] - 2026-03-27
 
 ### Fixed

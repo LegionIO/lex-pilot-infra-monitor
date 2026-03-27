@@ -34,14 +34,26 @@ module Legion
             return :critical unless status_code < 400
 
             entries = begin
-              Legion::JSON.load(body)
+              json_load(body)
             rescue StandardError => e
-              Legion::Logging.logger&.error(e.message)
+              log.error(e.message)
               []
             end
             return :healthy unless entries.is_a?(Array) && entries.any?
 
             :degraded
+          end
+
+          def json_load(str)
+            Legion::JSON.load(str)
+          end
+
+          def log
+            return Legion::Logging if defined?(Legion::Logging)
+
+            @log ||= Object.new.tap do |nl|
+              %i[debug info warn error fatal].each { |m| nl.define_singleton_method(m) { |*| nil } }
+            end
           end
 
           def check_nomad(status_code:, body: '')

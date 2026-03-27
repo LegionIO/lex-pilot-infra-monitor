@@ -146,7 +146,8 @@ module Legion
             Legion::Extensions::Slack::Client.new.send_webhook(
               webhook: webhook, text: message
             )
-          rescue StandardError
+          rescue StandardError => e
+            Legion::Logging.logger&.error(e.message)
             nil
           end
         end

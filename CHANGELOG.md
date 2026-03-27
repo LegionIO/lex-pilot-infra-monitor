@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.2.3] - 2026-03-27
+
+### Fixed
+- `Helpers::SemanticChecker#check_consul`: bare `rescue StandardError` now captures exception as `=> e` and logs via `Legion::Logging.logger`
+- `Runners::HealthChecker#send_webhook`: bare `rescue StandardError` now captures exception as `=> e` and logs via `Legion::Logging.logger`
+
 ## [0.2.2] - 2026-03-27
 
 ### Fixed

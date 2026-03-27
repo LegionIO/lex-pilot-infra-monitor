@@ -11,7 +11,7 @@ Infrastructure health check monitoring pilot extension for LegionIO. Polls confi
 ## Gem Info
 
 - **Gem name**: `lex-pilot-infra-monitor`
-- **Version**: `0.1.0`
+- **Version**: `0.2.1`
 - **Module**: `Legion::Extensions::PilotInfraMonitor`
 - **Ruby**: `>= 3.4`
 - **License**: MIT

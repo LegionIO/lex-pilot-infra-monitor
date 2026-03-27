@@ -35,7 +35,8 @@ module Legion
 
             entries = begin
               Legion::JSON.load(body)
-            rescue StandardError
+            rescue StandardError => e
+              Legion::Logging.logger&.error(e.message)
               []
             end
             return :healthy unless entries.is_a?(Array) && entries.any?

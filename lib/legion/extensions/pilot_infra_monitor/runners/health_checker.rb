@@ -7,6 +7,8 @@ module Legion
     module PilotInfraMonitor
       module Runners
         module HealthChecker
+          extend self
+
           def check_endpoints(urls: nil, endpoint_configs: nil, timeout: 5)
             configs = resolve_configs(urls: urls, endpoint_configs: endpoint_configs)
             return empty_endpoint_result if configs.empty?

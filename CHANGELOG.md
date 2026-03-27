@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.2.2] - 2026-03-27
+
+### Fixed
+- HealthChecker runner: added `extend self` so methods are callable as module methods by the actor framework
+
 ## [0.2.1] - 2026-03-24
 
 ### Fixed

@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.2.5] - 2026-03-27
+
+### Fixed
+- Add `log.error(e.message)` in `HealthChecker#check_single` rescue block to satisfy CI multi-line Rescue Logging lint
+
 ## [0.2.4] - 2026-03-27
 
 ### Fixed

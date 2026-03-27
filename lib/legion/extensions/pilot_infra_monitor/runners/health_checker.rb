@@ -6,7 +6,7 @@ module Legion
   module Extensions
     module PilotInfraMonitor
       module Runners
-        module HealthChecker
+        module HealthChecker # rubocop:disable Metrics/ModuleLength
           extend self
 
           def check_endpoints(urls: nil, endpoint_configs: nil, timeout: 5)
@@ -134,9 +134,10 @@ module Legion
               read_timeout: timeout
             ) { |http| http.get(uri.path.empty? ? '/' : uri.path) }
 
-            healthy = response.code.to_i < 400
-            { url: url, status: healthy ? :healthy : :unhealthy, code: response.code.to_i, body: response.body.to_s }
+            code = response.code.to_i
+            { url: url, status: code < 400 ? :healthy : :unhealthy, code: code, body: response.body.to_s }
           rescue StandardError => e
+            log.error(e.message)
             { url: url, status: :error, error: e.message }
           end
 

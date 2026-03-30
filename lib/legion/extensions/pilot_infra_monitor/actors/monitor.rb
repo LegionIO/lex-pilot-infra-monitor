@@ -4,7 +4,7 @@ module Legion
   module Extensions
     module PilotInfraMonitor
       module Actor
-        class Monitor < Legion::Extensions::Actors::Every
+        class Monitor < Legion::Extensions::Actors::Every # rubocop:disable Legion/Extension/EveryActorRequiresTime
           def runner_class
             'Legion::Extensions::PilotInfraMonitor::Runners::HealthChecker'
           end

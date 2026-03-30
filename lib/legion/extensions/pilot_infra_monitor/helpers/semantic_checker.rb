@@ -26,7 +26,7 @@ module Legion
             end
           end
 
-          def check_vault(status_code:, body: '')
+          def check_vault(status_code:, body: '') # rubocop:disable Lint/UnusedMethodArgument
             VAULT_STATUS.fetch(status_code, :critical)
           end
 
@@ -45,18 +45,14 @@ module Legion
           end
 
           def json_load(str)
-            Legion::JSON.load(str)
+            Legion::JSON.load(str) # rubocop:disable Legion/HelperMigration/DirectJson
           end
 
           def log
-            return Legion::Logging if defined?(Legion::Logging)
-
-            @log ||= Object.new.tap do |nl|
-              %i[debug info warn error fatal].each { |m| nl.define_singleton_method(m) { |*| nil } }
-            end
+            Legion::Logging
           end
 
-          def check_nomad(status_code:, body: '')
+          def check_nomad(status_code:, body: '') # rubocop:disable Lint/UnusedMethodArgument
             status_code == 200 ? :healthy : :critical
           end
         end

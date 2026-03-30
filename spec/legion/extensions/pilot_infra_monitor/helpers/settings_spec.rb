@@ -8,7 +8,7 @@ RSpec.describe Legion::Extensions::PilotInfraMonitor::Helpers::Settings do
       before do
         allow(Legion::Settings).to receive(:[]).with(:pilot_infra_monitor).and_return(
           { endpoints: [{ url: 'https://vault.example.com/v1/sys/health', type: 'vault' }],
-            webhook: 'https://hooks.slack.com/test' }
+            webhook:   'https://hooks.slack.com/test' }
         )
       end
 

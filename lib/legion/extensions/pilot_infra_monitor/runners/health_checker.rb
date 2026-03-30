@@ -6,7 +6,7 @@ module Legion
   module Extensions
     module PilotInfraMonitor
       module Runners
-        module HealthChecker # rubocop:disable Metrics/ModuleLength
+        module HealthChecker
           extend self
 
           def check_endpoints(urls: nil, endpoint_configs: nil, timeout: 5)
@@ -18,12 +18,12 @@ module Legion
             unhealthy = results.reject { |r| r[:status] == :healthy }
 
             {
-              total: results.size,
-              healthy: results.count { |r| r[:status] == :healthy },
-              unhealthy: unhealthy.size,
-              results: results,
+              total:        results.size,
+              healthy:      results.count { |r| r[:status] == :healthy },
+              unhealthy:    unhealthy.size,
+              results:      results,
               alert_needed: unhealthy.any?,
-              transitions: transitions
+              transitions:  transitions
             }
           end
 
@@ -118,9 +118,9 @@ module Legion
             return result unless endpoint_type
 
             semantic_status = Helpers::SemanticChecker.classify(
-              type: endpoint_type,
+              type:        endpoint_type,
               status_code: result[:code],
-              body: result.fetch(:body, '')
+              body:        result.fetch(:body, '')
             )
             result.merge(status: semantic_status)
           end
@@ -129,7 +129,7 @@ module Legion
             uri = URI(url)
             response = Net::HTTP.start(
               uri.host, uri.port,
-              use_ssl: uri.scheme == 'https',
+              use_ssl:      uri.scheme == 'https',
               open_timeout: timeout,
               read_timeout: timeout
             ) { |http| http.get(uri.path.empty? ? '/' : uri.path) }
@@ -153,7 +153,7 @@ module Legion
           end
 
           def log
-            defined?(Legion::Logging) ? Legion::Logging : @log ||= ::Logger.new(nil)
+            Legion::Logging
           end
         end
       end

@@ -15,7 +15,7 @@ module Legion
 
           def endpoints
             entries = config[:endpoints] || []
-            entries.map { |e| e.is_a?(Hash) ? e[:url] : e.to_s }.compact
+            entries.filter_map { |e| e.is_a?(Hash) ? e[:url] : e.to_s }
           end
 
           def endpoint_configs
